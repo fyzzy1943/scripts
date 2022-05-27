@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Pter Fitgirl release Uploady
 // @namespace    https://pterclub.com/forums.php?action=viewtopic&topicid=3391
-// @version      1.0
+// @version      1.1.0
 // @description  Game Uploady for Pterclub
-// @author       NeutronNoir, ZeDoCaixao, scatking, ccf2012
+// @author       NeutronNoir, ZeDoCaixao, scatking, ccf2012, fyzzy
 // @match        https://pterclub.com/uploadgame.php*
 // @match        https://pterclub.com/editgame.php*
 // @require      https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js

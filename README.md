@@ -1,3 +1,3 @@
 # scripts
 
-- https://github.com/fyzzy1943/scripts/blob/main/Fitgirl_Uploady.js 上传Fitgirl资源使用
+- https://github.com/fyzzy1943/scripts/blob/main/Fitgirl_Uploady.js 填充FitGirl相关信息

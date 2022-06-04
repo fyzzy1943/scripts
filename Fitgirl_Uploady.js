@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Pter Fitgirl release Uploady
-// @namespace    https://pterclub.com/forums.php?action=viewtopic&topicid=3391
-// @version      1.1.0
+// @namespace    https://pterclub.com/forums.php?action=viewtopic&forumid=36&topicid=6829
+// @version      1.2.0
 // @description  Game Uploady for Pterclub
-// @author       NeutronNoir, ZeDoCaixao, scatking, ccf2012, fyzzy
+// @author       NeutronNoir, ZeDoCaixao, scatking, ccf2012, fyzzy1943
 // @match        https://pterclub.com/uploadgame.php*
 // @match        https://pterclub.com/editgame.php*
 // @require      https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js
@@ -103,8 +103,8 @@ function parseFitgirRepack($document){
             console.log('found dlc anchor, not found dlc list, please check.');
         }
     }
-    
 
+    // Assembly torrent info
     var output = '\n\n[font=sans-serif]\n\n\n' + info1_bb + '\n\n\n[b]' + info2_header_bb + '[/b]\n' +  info2_list_bb + '\n'
 
     if (dlc_bb != '') {
@@ -114,7 +114,32 @@ function parseFitgirRepack($document){
     output = output + '[/font]';
 
     return output;
-  }
+}
+
+
+function getFitgirlTitle(doc) {
+    var title = '';
+    var h3_list = doc.querySelectorAll("div[class='entry-content'] > h3");
+    var title_html = Array.from(h3_list).find(gg => (gg.textContent.indexOf("#") != -1));
+    if (!title_html) {
+        console.log("Not found: title_html");
+        return title;
+    }
+
+    var title_match = title_html.innerHTML.match(/strong\>(.*)\<\/str/i);
+    if (!title_match || title_match.length != 2) {
+        console.log(title_html.innerHTML);
+        console.log("title not match");
+        return title;
+    }
+
+    title = title_match[1].replace(/\<span.*?"\>/i, "");
+    title = title.replace(/\<\/span\>/i, "");
+    console.log(title);
+
+    title = title + ' -FitGirl';
+    return title;
+}
 
 
 function parseSteamLanguage($document){
@@ -198,9 +223,27 @@ function requestUrl(urlSteam, urlFitgirl) {
         responseType: "document",
         onload: function(resp){
             var parser  = new DOMParser ();
-            var ajaxDoc  = parser.parseFromString (resp.responseText, "text/html");
+            var ajaxDoc  = parser.parseFromString(resp.responseText, "text/html");
+
+            // 种子简介
             bbstr = parseFitgirRepack(ajaxDoc)
             editboxPart2(bbstr)
+
+            // 获取标题
+            if ($('#pfru_get_title').is(':checked')) {
+                var torrent_title = getFitgirlTitle(ajaxDoc);
+                $('#name').val(torrent_title);
+            }
+
+            // 游戏本体
+            $("#categories").find("option[value='1']").attr("selected",true);
+            // Portable
+            $("#format").find("option[value='4']").attr("selected",true);
+            // 欧美
+            $("#team").find("option[value='4']").attr("selected",true);
+            // 可信源
+            $("#vs").attr("checked",true);
+
             // console.log (bbstr);
         }
     });
@@ -227,7 +270,8 @@ function requestUrl(urlSteam, urlFitgirl) {
     const steamurl = $("#steamurl");
     const fitgirlurl = $("#fitgirlurl");
     fitgirlurl.after(
-        '<input type="button" id="fill_form" value="收集信息自动填写">' ) ;
+        '<label>替换标题:<a href="javascript:void(0);" title="勾选后获取原始标题，注意需要手动去除游戏名" style="color: red">(?)</a></label><input type="checkbox" id="pfru_get_title" />'
+        + '<input type="button" id="fill_form" value="收集信息自动填写">');
     $('#fill_form').click(function () { requestUrl(steamurl, fitgirlurl); $("#console").val("16"); });
 
 })();

@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Pter Fitgirl release Uploady
-// @namespace    https://pterclub.com/forums.php?action=viewtopic&forumid=36&topicid=6829
+// @namespace    https://pterclub.com/forums.php?action=viewtopic&topicid=3391
 // @version      1.2.0
 // @description  Game Uploady for Pterclub
 // @author       NeutronNoir, ZeDoCaixao, scatking, ccf2012, fyzzy1943
@@ -103,7 +103,7 @@ function parseFitgirRepack($document){
             console.log('found dlc anchor, not found dlc list, please check.');
         }
     }
-
+    
     // Assembly torrent info
     var output = '\n\n[font=sans-serif]\n\n\n' + info1_bb + '\n\n\n[b]' + info2_header_bb + '[/b]\n' +  info2_list_bb + '\n'
 
@@ -243,7 +243,7 @@ function requestUrl(urlSteam, urlFitgirl) {
             $("#team").find("option[value='4']").attr("selected",true);
             // 可信源
             $("#vs").attr("checked",true);
-
+            
             // console.log (bbstr);
         }
     });

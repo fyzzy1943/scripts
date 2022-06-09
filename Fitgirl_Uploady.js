@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Pter Fitgirl release Uploady
 // @namespace    https://pterclub.com/forums.php?action=viewtopic&topicid=3391
-// @version      1.2.0
+// @version      1.3.0
 // @description  Game Uploady for Pterclub
 // @author       NeutronNoir, ZeDoCaixao, scatking, ccf2012, fyzzy1943
 // @match        https://pterclub.com/uploadgame.php*
@@ -13,6 +13,8 @@
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // ==/UserScript==
+
+const DESCR = $('#descr');
 
 function html2bb(str) {
     if (!str) return "";
@@ -105,13 +107,11 @@ function parseFitgirRepack($document){
     }
     
     // Assembly torrent info
-    var output = '\n\n[font=sans-serif]\n\n\n' + info1_bb + '\n\n\n[b]' + info2_header_bb + '[/b]\n' +  info2_list_bb + '\n'
+    var output = '' + info1_bb + '\n\n\n[b]' + info2_header_bb + '[/b]\n' +  info2_list_bb + '\n'
 
     if (dlc_bb != '') {
         output = output + '\n[b]Included DLCs:[/b]\n' + dlc_bb + '\n'
     }
-
-    output = output + '[/font]';
 
     return output;
 }
@@ -137,8 +137,21 @@ function getFitgirlTitle(doc) {
     title = title.replace(/\<\/span\>/i, "");
     console.log(title);
 
-    title = title + ' -FitGirl';
     return title;
+}
+
+
+function get1337xUrl(doc) {
+    // var info2_headerlist = $document.querySelectorAll("div[class='entry-content'] > h3" );
+    var url_e = doc.querySelector("div[class='entry-content'] > ul:nth-child(5) > li:first-child > a:first-child");
+    if (!url_e) {
+        console.log("1337x url get failed: div[class='entry-content'] > ul:nth-child(5) > li:first-child > a:first-child not found.");
+        return '';
+    }
+
+    // console.log(url);
+    var url = url_e.getAttribute('href');
+    return url.indexOf('1337x') != -1 ? url : ''
 }
 
 
@@ -196,44 +209,183 @@ function parseSteamLanguage($document){
       output += '\n';
     }
     return output;
-  }
+}
 
 
 function areSame(array1, array2){
     return array1.length === array2.length && array1.sort().every((value, index) => value === array2.sort()[index])
 }
 
-function editboxPart1(str) {
-    desc_field = "#descr";
-    var hidetext = '[hide=安装步骤]\n [*]运行 \"Verify BIN files before installation.bat\" 进行MD5验证（可选）\n [*]运行 \"setup.exe\"安装游戏\n [*]开始游玩\n [*]游戏经过高压，需要一定时间才能解压完毕，请耐心等待。[/hide]';
+// function editboxPart1(str) {
+//     desc_field = "#descr";
+//     var hidetext = '[hide=安装步骤]\n [*]运行 \"Verify BIN files before installation.bat\" 进行MD5验证（可选）\n [*]运行 \"setup.exe\"安装游戏\n [*]开始游玩\n [*]游戏经过高压，需要一定时间才能解压完毕，请耐心等待。[/hide]';
 
-    $(desc_field).val(hidetext + '\n\n' + str + $(desc_field).val());
+//     $(desc_field).val(hidetext + '\n\n' + str + $(desc_field).val());
+// }
+
+function editboxPart2(fitgirl_info) {
+    var text = '[hide=安装步骤]\n [*]运行 \"Verify BIN files before installation.bat\" 进行MD5验证（可选）\n [*]运行 \"setup.exe\"安装游戏\n [*]开始游玩\n [*]游戏经过高压，需要一定时间才能解压完毕，请耐心等待。[/hide]';
+
+    text = text + '\n\n[font=sans-serif]'
+
+    text = text + '\n\n';
+    text = text + '=+=LanguageAnchor=+=' + '\n\n';
+    text = text + fitgirl_info;
+
+    text = text + '[/font]';
+
+    desc_field = "#descr";
+    var origin_text = $(desc_field).val();
+    $(desc_field).val(text + origin_text);
 }
 
-function editboxPart2(str) {
-    desc_field = "#descr";
-    $(desc_field).val($(desc_field).val() + str);
+
+function changeStatus(msg) {
+    $('#pfru_status').html(' >>' + msg);
+}
+
+
+function parse1337Language(doc) {
+    // console.log(doc);
+    if (!doc) {
+        return;
+    }
+    var html1 = doc.querySelector("div[class='torrent-tabs']");
+    if (!html1) {
+        return;
+    }
+
+    html1 = html1.textContent;
+    // console.log(html1);
+
+    var lang = html1.match(/(Interface Language[\s\S]*?)Crack/im);
+    if (!lang || lang.length != 2) {
+        console.log(lang);
+        return;
+    }
+
+    lang = lang[1].trim()
+                .replace(/\s+/g, ' ')
+                .replace(/Audio Language/g, '\nAudio Language')
+                .replace(/, /g, '、')
+                .replace(/Interface Language/g, '[b]界面语言[/b]')
+                .replace(/Audio Language/g, '[b]音频语言[/b]')
+                .replace(/Simplified Chinese/g, '简体中文')
+                .replace(/Traditional Chinese/g, '繁体中文')
+                .replace(/English/g, '英语')
+                .replace(/Russian/g, '俄语')
+                .replace(/German/g, '德语')
+                .replace(/French/g, '法语')
+                .replace(/Korean/g, '韩语')
+                .replace(/Japanese/g, '日语')
+                .replace(/Italian/g, '意大利语')
+                .replace(/Turkish/g, '土耳其语')
+                .replace(/Spanish - Latin America/g, '西班牙语-拉丁美洲')
+                .replace(/Portuguese - Brazil/g, '葡萄牙语-巴西')
+                .replace(/Portuguese/g, '葡萄牙语')
+                .replace(/Spanish - Spain/g, '西班牙语-西班牙')
+                .replace(/Thai/g, '泰语')
+                .replace(/Arabic/g, '阿拉伯语')
+                .replace(/Danish/g, '丹麦语')
+                .replace(/Dutch/g, '荷兰语')
+                .replace(/Finnish/g, '芬兰语')
+                .replace(/Norwegian/g, '挪威语')
+                .replace(/Polish/g, '波兰语')
+                .replace(/Swedish/g, '瑞典语')
+                ;
+
+    console.log('1337x: ' + lang);
+
+    return lang;
+}
+
+
+function replaceLangAnchor(bb_lang) {
+    if (!bb_lang) {
+        changeStatus('处理完成！未获取到语言！');
+        return;
+    }
+    
+    var descr = DESCR.val().replace('=+=LanguageAnchor=+=', bb_lang.trim());
+    DESCR.val(descr);
+    changeStatus('处理完成！');
 }
 
 function requestUrl(urlSteam, urlFitgirl) {
+    changeStatus('开始获取FitGirl信息...');
     var bbstr;
     GM.xmlHttpRequest({
         method: "GET",
         url: urlFitgirl.val(),
         responseType: "document",
-        onload: function(resp){
-            var parser  = new DOMParser ();
-            var ajaxDoc  = parser.parseFromString(resp.responseText, "text/html");
+        onload: function(resp) {
+            var parser = new DOMParser ();
+            var ajaxDoc = parser.parseFromString(resp.responseText, "text/html");
 
             // 种子简介
             bbstr = parseFitgirRepack(ajaxDoc)
             editboxPart2(bbstr)
 
-            // 获取标题
-            if ($('#pfru_get_title').is(':checked')) {
-                var torrent_title = getFitgirlTitle(ajaxDoc);
-                $('#name').val(torrent_title);
+            var lang_source = $("input[name='pfru_lang_source']:checked").val();
+            console.log('选择从: ' + lang_source + ' 获取游戏语言');
+
+            if (lang_source == '1337x') {
+                var url1337x = get1337xUrl(ajaxDoc); // 获取1337x链接
+                if (url1337x && url1337x != '') {
+                    console.log('访问: ' + url1337x + ' 获取语言');
+                    changeStatus('正在从1337x获取语言列表...');
+
+                    GM.xmlHttpRequest({
+                        method: 'GET',
+                        url: url1337x,
+                        onload(resp) {
+                            var ajaxDoc = new DOMParser ().parseFromString(resp.responseText, "text/html");
+                            var bb_lang = parse1337Language(ajaxDoc);
+                            replaceLangAnchor(bb_lang);
+                        },
+                        onerror: function(resp) {
+                            console.log(resp);
+                            changeStatus('语言获取失败！');
+                        }
+                    });
+                } else {
+                    changeStatus('未获取到1337x链接...');
+                }
+            } else {
+                changeStatus('正在从steam获取语言列表...');
+                GM.xmlHttpRequest({
+                    method: "GET",
+                    url: urlSteam.val(),
+                    responseType: "document",
+                    onload: function(resp){
+                        var parser  = new DOMParser ();
+                        var ajaxDoc = parser.parseFromString (resp.responseText, "text/html");
+                        var bb_lang = parseSteamLanguage(ajaxDoc);
+                        replaceLangAnchor(bb_lang);
+                        // console.log (bbstr);
+                    },
+                    onerror: function(resp) {
+                        console.log(resp);
+                        changeStatus('语言获取失败！');
+                    }
+                });
             }
+        
+
+           
+
+            // 获取标题
+            var fitgirl_title = getFitgirlTitle(ajaxDoc); // 原始标题
+            var game_title = $("h1#top").text().slice(0,-4).trim();
+
+            var name1 = '游戏名称: <span style="color: red">' + game_title + '</span><br>';
+            var name2 = 'FitGirl 原始名称: <span style="color: red">' + fitgirl_title + '</span>' + '<br>';
+
+            var $name_e = $('#name').parent();
+            $name_e.html(name1 + name2 + $name_e.html());
+
+            $('#name').val((fitgirl_title.replace(game_title, '').trim() + ' -FitGirl').trim());
+
 
             // 游戏本体
             $("#categories").find("option[value='1']").attr("selected",true);
@@ -247,31 +399,33 @@ function requestUrl(urlSteam, urlFitgirl) {
             // console.log (bbstr);
         }
     });
-    GM.xmlHttpRequest({
-        method: "GET",
-        url: urlSteam.val(),
-        responseType: "document",
-        onload: function(resp){
-            var parser  = new DOMParser ();
-            var ajaxDoc = parser.parseFromString (resp.responseText, "text/html");
-            bbstr = parseSteamLanguage(ajaxDoc)
-            editboxPart1(bbstr)
-            // console.log (bbstr);
-        }
-    });
+    
 }
 
 (function() {
     'use strict';
-    $("input[name='name']").parent().parent().after(
-        "<tr><td>Steam URL</td><td><input style='width: 450px;' id='steamurl' /></td>/tr"+
-        "<tr><td>Fitgirl URL</td><td><input style='width: 450px;' id='fitgirlurl' /></td></tr>"
-    );
+
+    const PFRU_HTML = '<tr><td>Steam URL</td><td><input style="width: 450px;" id="steamurl" /></td></tr>'
+                    + '<tr><td>FitGirl URL</td><td><input style="width: 450px;" id="fitgirlurl" /></td></tr>';
+
+    var anchor = window.location.href.includes("uploadgame") ? $("#name") : $("input[name='torrentname']");
+    anchor.parent().parent().after(PFRU_HTML);
+    
     const steamurl = $("#steamurl");
     const fitgirlurl = $("#fitgirlurl");
+
+    var lang_source_html = '<input type="radio" name="pfru_lang_source" value="1337x" checked />1337x'
+    + '<input type="radio" name="pfru_lang_source" value="steam" />steam';
+
     fitgirlurl.after(
-        '<label>替换标题:<a href="javascript:void(0);" title="勾选后获取原始标题，注意需要手动去除游戏名" style="color: red">(?)</a></label><input type="checkbox" id="pfru_get_title" />'
-        + '<input type="button" id="fill_form" value="收集信息自动填写">');
-    $('#fill_form').click(function () { requestUrl(steamurl, fitgirlurl); $("#console").val("16"); });
+        // '<label>替换标题:<a href="javascript:void(0);" title="勾选后获取原始标题，注意需要手动去除游戏名" style="color: red">(?)</a></label><input type="checkbox" id="pfru_get_title" />'
+        lang_source_html
+        + ' <input type="button" id="pfru_fill_form" value="收集信息自动填写">'
+        + ' <span id="pfru_status"></span>');
+
+    $('#pfru_fill_form').click(function () { 
+        requestUrl(steamurl, fitgirlurl); 
+        $("#console").val("16"); 
+    });
 
 })();
